@@ -1,0 +1,1257 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ガチャ天井計算機（非公式）｜予算から出る確率と必要金額</title>
+<meta name="description" content="あと何連で天井？予算でどれだけ出る確率？ 原神・スターレイル・ゼンゼロ・鳴潮・FGO・ウマ娘・ブルアカなどに対応。結果は画像カードで共有できます。非公式の計算ツールです。">
+<meta property="og:title" content="ガチャ天井計算機（非公式）">
+<meta property="og:description" content="予算でどれだけ出る確率？天井まであと何円？ 主要ゲームに対応。">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<style>
+:root{
+  --bg:#0e1124;
+  --panel:#171b34;
+  --panel2:#1e2342;
+  --line:#2d3461;
+  --ink:#eef0ff;
+  --muted:#a3a9d4;
+  --gold:#ffd166;
+  --red:#ff6b81;
+  --green:#6fe3a5;
+  --blue:#7aa2ff;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo","Noto Sans JP",sans-serif;
+  line-height:1.6;padding-bottom:40px;
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+.hero{padding:24px 0 8px}
+.eyebrow{margin:0;font-size:12px;letter-spacing:.14em;color:var(--gold)}
+h1{margin:4px 0 6px;font-size:28px;line-height:1.3}
+.lead{margin:0;font-size:14px;color:var(--muted)}
+.notice{
+  margin:14px 0;padding:10px 12px;border:1px solid #6b5a22;background:#2a2410;
+  border-radius:10px;font-size:13px;color:#ffe9a8;
+}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+h2{margin:0 0 10px;font-size:15px;color:var(--gold);letter-spacing:.04em}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+label .tag{
+  display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;
+  font-size:11px;line-height:18px;vertical-align:middle;
+}
+.tag.est{background:#3a3315;color:#ffd166}
+.tag.unk{background:#431a28;color:#ff8da1}
+.tag.ok{background:#16382b;color:#6fe3a5}
+select,input[type=number]{
+  width:100%;min-height:46px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);font-size:16px;font-family:inherit;
+}
+input[type=checkbox]{width:22px;height:22px;vertical-align:middle;margin-right:8px;accent-color:var(--gold)}
+.chk{display:flex;align-items:center;margin-top:12px;font-size:14px;color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12px;color:var(--muted);margin:4px 0 0}
+.result-head{text-align:center;padding:6px 0 2px}
+.result-head .big{font-size:44px;font-weight:800;color:var(--gold);line-height:1.15}
+.result-head .sub{font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.mini{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.mini .k{font-size:12px;color:var(--muted)}
+.mini .v{font-size:20px;font-weight:700}
+.mini .v small{font-size:12px;font-weight:400;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:500;font-size:12px}
+canvas#chart{width:100%;height:190px;display:block;margin-top:8px;border-radius:8px;background:var(--panel2)}
+canvas#card{width:100%;height:auto;display:block;border-radius:10px;margin:10px 0}
+.btn{
+  appearance:none;border:0;border-radius:10px;background:var(--gold);color:#241c00;
+  font-family:inherit;font-size:16px;font-weight:700;padding:12px 16px;min-height:46px;cursor:pointer;width:100%;
+}
+.btn.sub{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btns{display:grid;gap:10px;margin-top:12px}
+details{margin:10px 0}
+summary{cursor:pointer;font-weight:700;font-size:14px;padding:6px 0}
+.src{font-size:12px;color:var(--muted);padding-left:18px}
+.src li{margin:3px 0}
+.src a{color:var(--blue)}
+footer{margin:24px 0 8px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.warn{color:var(--red)}
+#toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;
+  padding:10px 16px;border-radius:999px;font-size:14px;z-index:10;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;
+}
+#toast.show{opacity:.92}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">このページはJavaScriptを使います。ブラウザの設定でオンにしてください。</p></noscript>
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">非公式・無料・登録なし</p>
+    <h1>ガチャ天井計算機</h1>
+    <p class="lead">天井まであと何連・何円？ いまの予算でどれだけ出る？ 使いすぎる前に、数字で確認しよう。</p>
+  </header>
+
+  <div class="notice">
+    数字は公式の発表ではなく、攻略Wiki・報道の情報をもとにしています（最終確認：2026年11月5日）。
+    ゲーム内の「提供割合」画面と違うときは、下の「詳細設定」で直してください。<b>確率の上がり方（ソフト天井）は、どのゲームも公式に数値がなく、推定です。</b>
+  </div>
+
+  <section class="panel" aria-labelledby="h-game">
+    <h2 id="h-game">1. ゲームを選ぶ</h2>
+    <label for="game">ゲーム</label>
+    <select id="game"></select>
+    <label for="ban">ガチャの種類</label>
+    <select id="ban"></select>
+    <p class="hint" id="bannote"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-now">
+    <h2 id="h-now">2. いまの状況</h2>
+    <label for="c" id="c-label">今の天井カウント</label>
+    <input id="c" type="number" inputmode="numeric" min="0" step="1" value="0">
+    <p class="hint" id="c-hint"></p>
+    <div class="chk" id="gu-wrap"><input id="gu" type="checkbox"><label for="gu" style="margin:0;color:var(--ink);display:inline">次の★5（最高レア）はピックアップ確定（前回すり抜けた）</label></div>
+    <div class="row2">
+      <div id="stones-wrap">
+        <label for="stones" id="stones-label">手持ちの石（個数）</label>
+        <input id="stones" type="number" inputmode="numeric" min="0" step="1" value="0">
+      </div>
+      <div>
+        <label for="tickets" id="tickets-label">チケット等で引ける回数</label>
+        <input id="tickets" type="number" inputmode="numeric" min="0" step="1" value="0">
+      </div>
+    </div>
+    <label for="budget">追加で使ってもよい金額（円）</label>
+    <input id="budget" type="number" inputmode="numeric" min="0" step="100" value="0">
+    <p class="hint">使う上限を先に決めておくと、使いすぎを防げます。</p>
+    <label for="rate" id="rate-label">狙いの1体が出る確率（%）</label>
+    <input id="rate" type="number" inputmode="decimal" min="0" max="100" step="0.01">
+    <p class="hint" id="rate-hint"></p>
+    <label for="yen" id="yen-label">1回あたりの金額（円）</label>
+    <select id="pattern" aria-label="購入パターン" hidden></select>
+    <input id="yen" type="number" inputmode="decimal" min="0" step="1" placeholder="わからなければ空欄でOK">
+    <p class="hint" id="yen-hint"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-res">
+    <h2 id="h-res">3. 結果</h2>
+    <div id="result"></div>
+    <canvas id="chart" aria-label="出る確率のグラフ"></canvas>
+    <p class="hint">グラフの縦軸は「そこまでに狙いが出ている確率」、横軸は引く回数です。</p>
+    <div class="btns">
+      <button type="button" class="btn" id="btn-card">結果カードの画像をつくる</button>
+    </div>
+    <div id="card-area" hidden>
+      <canvas id="card" width="1080" height="1250" aria-label="結果カード画像"></canvas>
+      <div class="btns">
+        <button type="button" class="btn" id="btn-save">画像を保存する</button>
+        <button type="button" class="btn sub" id="btn-x">Xの投稿画面を開く（文章のみ）</button>
+        <button type="button" class="btn sub" id="btn-copy">この条件のリンクをコピー</button>
+      </div>
+      <p class="hint">Xの投稿画面には文章だけが入ります。保存した画像は、投稿画面で添付してください。</p>
+    </div>
+  </section>
+
+  <details class="panel" id="adv">
+    <summary>詳細設定（数字を自分で直す）</summary>
+    <p class="hint">ゲーム内の「提供割合」と違うときは、ここを直すと計算に反映されます。</p>
+    <div id="advfields"></div>
+    <div class="btns"><button type="button" class="btn sub" id="btn-reset">このゲームの初期値に戻す</button></div>
+  </details>
+
+  <details class="panel">
+    <summary>このデータの出典と注意点</summary>
+    <ul class="src" id="srclist"></ul>
+  </details>
+
+  <footer>
+    <p>このサイトは非公式の計算ツールです。各ゲームの運営会社とは関係ありません。計算結果は目安で、結果を保証するものではありません。ガチャは確率のため、予算の範囲内で楽しみましょう。</p>
+    <p>入力した内容は、このサイトのサーバーには送られません（ブラウザの中だけで計算します）。</p>
+  </footer>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============================================================
+  //  データ（ここを書きかえれば、ゲームの追加・更新ができます）
+  //  model: "hoyo"   = 確率上昇(ソフト天井)＋確定(ハード天井)＋すり抜け
+  //  model: "simple" = 毎回同じ確率。N回で確定(天井交換)。N=0なら天井なし
+  //  flag:  est=推定 / unk=未確認 / ok=公式または複数の出典で一致
+  // ============================================================
+  var CHECKED = "2026年11月5日";
+
+  var HOYO_PAT = [
+    { label: "ボーナス込み 12,000円＝8,080個（約1.49円/個）", unit: 12000 / 8080 },
+    { label: "ボーナスなし 12,000円＝6,480個（約1.85円/個）", unit: 12000 / 6480 },
+    { label: "初回2倍 12,000円＝12,960個（約0.93円/個）", unit: 12000 / 12960 }
+  ];
+  var WUWA_PAT = [
+    { label: "ボーナスなし 12,000円＝6,480個（約1.85円/個）", unit: 12000 / 6480 },
+    { label: "初回2倍 12,000円＝12,960個（約0.93円/個）", unit: 12000 / 12960 }
+  ];
+
+  var GAMES = [
+    {
+      id: "genshin", name: "原神", unitName: "原石", perPull: 160, pat: HOYO_PAT,
+      src: [
+        ["Game8 原神 掴みし明光（2026-11-04更新）", "https://game8.jp/genshin/686880"],
+        ["AUTOMATON 原神Ver.5.4（2025-02-12・公式発表の引用）", "https://automaton-media.com/articles/newsjp/genshin-20250212-328100/"],
+        ["INSIDE 原神Ver.5.0（2024-08-16・公式発表の引用）", "https://www.inside-games.jp/article/2024/08/16/158441.html"],
+        ["Game8 原神 創世結晶の価格（2025-12-03）", "https://game8.jp/genshin/344492"]
+      ],
+      bans: [
+        {
+          id: "char", name: "キャラ（イベント祈願）", model: "hoyo",
+          P: { base: 0.006, soft: 74, step: 0.06, hard: 90, win: 0.55 },
+          flag: { base: "ok", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "★5の基本確率は0.6%、90回で確定。確率が上がり始める回数と上がり方は公式に数値がなく、コミュニティ推定（74回目から+6%ずつ）です。",
+            "ピックアップ率は、掴みし明光（Ver.5.0〜）を含めた実質55%として計算しています（公式案内）。外れた次の★5は確定です。掴みし明光の細かい挙動は簡略化しています。"
+          ]
+        },
+        {
+          id: "weapon", name: "武器（イベント祈願・武器）", model: "hoyo",
+          P: { base: 0.007, soft: 63, step: 0.07, hard: 80, win: 0.75 },
+          flag: { base: "ok", soft: "est", step: "est", hard: "ok", win: "est" },
+          notes: [
+            "★5武器の基本確率は0.7%、80回で確定。確率上昇の開始（63回目）と上がり方（+7%）は推定です。",
+            "ピックアップ率75%は第三者の記載で、公式は未確認です。神鋳軌定（命定値）の細かい仕様は簡略化し、「外れたら次は確定」として計算しています。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "hsr", name: "崩壊：スターレイル", unitName: "星玉", perPull: 160, pat: HOYO_PAT,
+      src: [
+        ["Game8 スターレイル ガチャ確率・天井（2026-09-01更新）", "https://game8.jp/houkaistarrail/654379"],
+        ["アルテマ スターレイル（2026-01-28更新）", "https://altema.jp/houkaistarrail/gatyakakuritu"],
+        ["Buffget スターレイル（2026-04-07）", "https://buffget.com/ja/news/hsr-pity-calculator-oneiric-shard-top-up-guide-2026"]
+      ],
+      bans: [
+        {
+          id: "char", name: "キャラ（限定ワープ）", model: "hoyo",
+          P: { base: 0.006, soft: 75, step: 0.06, hard: 90, win: 0.5 },
+          flag: { base: "est", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "★5の基本確率は0.6%（出典はやや古い版のWikiと第三者記事）。90回で確定。外れたら次の★5はピックアップ確定です。",
+            "確率上昇は75回目から（出典で74と75に割れ、推定）。上がり方も推定です。Game8の記載に、外れた時の対象が別の限定キャラになる場合の62.5%という記述がありますが、内容は未確認です。"
+          ]
+        },
+        {
+          id: "lc", name: "光円錐（限定ワープ）", model: "hoyo",
+          P: { base: 0.008, soft: 65, step: 0.07, hard: 80, win: 0.75 },
+          flag: { base: "est", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "★5光円錐の基本確率は0.8%、80回で確定。外れたら次の★5光円錐はピックアップ確定です。",
+            "確率上昇は65回目から（推定）。上がり方（+7%）も推定です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "zzz", name: "ゼンレスゾーンゼロ", unitName: "ポリクローム", perPull: 160, pat: HOYO_PAT,
+      src: [
+        ["Game8 ゼンゼロ ガチャ（2026-11-05更新）", "https://game8.jp/zenless/608141"],
+        ["AppMatch ゼンゼロ モノクローム価格（2026-07-14）", "https://games.appmatch.jp/gamewiki/zenlesszonezero/1606356401-48/"],
+        ["Gamerch ゼンゼロ 確率（2024-07-12・古い）", "https://gamerch.com/zenless/859697"]
+      ],
+      bans: [
+        {
+          id: "char", name: "キャラ（独占チャンネル）", model: "hoyo",
+          P: { base: 0.006, soft: 74, step: 0.06, hard: 90, win: 0.5 },
+          flag: { base: "est", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "S級の基本確率は0.6%、90回で確定。外れたら次はピックアップ確定です。確率上昇の開始・上がり方は推定です。",
+            "確率の出典の一部が2024年の古い記事です。出典間で、カウントの共有範囲に食い違いがあります（未確認）。"
+          ]
+        },
+        {
+          id: "weapon", name: "音動機（音動機チャンネル）", model: "hoyo",
+          P: { base: 0.01, soft: 65, step: 0.06, hard: 80, win: 0.75 },
+          flag: { base: "est", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "S級音動機の基本確率は1%、80回で確定。外れたら次はピックアップ確定（75:25）です。",
+            "確率上昇は65回目から（推定）。出典は主に2024年の古い記事です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "wuwa", name: "鳴潮", unitName: "星声", perPull: 160, pat: WUWA_PAT,
+      src: [
+        ["アルテマ 鳴潮 排出率（2026-10-01更新）", "https://altema.jp/meichou/gachaensyutu"],
+        ["アルテマ 鳴潮 課金（2026-02-01更新）", "https://altema.jp/meichou/kakin"],
+        ["Game8 鳴潮（2026-10-22更新）", "https://game8.jp/meicho/610590"],
+        ["Buffget 鳴潮（2026-09-19）", "https://buffget.com/ja/news/wuthering-waves-lunite-how-many-packs-for-80-pull-5-star"]
+      ],
+      bans: [
+        {
+          id: "char", name: "キャラ（限定）", model: "hoyo",
+          P: { base: 0.008, soft: 66, step: 0.066, hard: 80, win: 0.5 },
+          flag: { base: "ok", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "★5の基本確率は0.8%、80回で確定。外れたら次はピックアップ確定（最大160回）です。",
+            "確率上昇は66回目から。上がり方は公式にも出典にも数値がないため、確定の80回に向けて直線的に上がる前提の推定です。",
+            "2回目以降のチャージのおまけ内容は未確認です（このツールでは「ボーナスなし」と「初回2倍」のみ提示）。"
+          ]
+        },
+        {
+          id: "weapon", name: "武器（限定）", model: "hoyo",
+          P: { base: 0.008, soft: 66, step: 0.066, hard: 80, win: 1 },
+          flag: { base: "est", soft: "est", step: "est", hard: "ok", win: "ok" },
+          notes: [
+            "武器ガチャはすり抜けなしで、80回で★5ピックアップ武器が確定します（アルテマ、Game8）。",
+            "武器単独の基本確率は0.8%と推測しています（未確認）。確率上昇は推定です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "fgo", name: "Fate/Grand Order", unitName: "聖晶石", perPull: 3, yenUnit: 9500 / 168,
+      yenNote: "聖晶石 9,500円＝168個（約57円/個、2026-07-22更新の価格表）で換算。アプリ内購入は約5%高いとの注記あり。",
+      src: [
+        ["FGO公式お知らせ（2026-11-04・確定召喚の仕様）", "https://news.fate-go.jp/2026/11/2026gudaguda_cp_pu/"],
+        ["神ゲー攻略 FGO 確率・天井（2026-11-04更新）", "https://kamigame.jp/fgo/page/432592795883047539.html"],
+        ["神ゲー攻略 FGO 聖晶石の価格（2026-07-22更新）", "https://kamigame.jp/fgo/%E3%82%B3%E3%83%A9%E3%83%A0/%E8%81%96%E6%99%B6%E7%9F%B3.html"]
+      ],
+      bans: [
+        {
+          id: "pu", name: "期間限定ピックアップ召喚（確定召喚）", model: "simple",
+          P: { rate: 0.008, N: 330 },
+          flag: { rate: "ok", N: "ok" },
+          notes: [
+            "確定召喚（天井）は、期間限定の召喚で329回以内にピックアップ対象の★5サーヴァントが出なければ、330回目で必ず1騎出ます（公式お知らせで確認）。召喚内容ごとにカウントは別です。",
+            "狙いの確率0.8%は、★5サーヴァント1騎だけがピックアップの場合の値です（神ゲー攻略）。2騎同時なら各0.4%などになるので、詳細設定で直してください。",
+            "330回＝聖晶石900個です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "uma", name: "ウマ娘 プリティーダービー", unitName: "ジュエル", perPull: 150, yenUnit: 2,
+      yenNote: "ジュエル 5,000個＝10,000円（2円/個）で換算。回数限定の安いパックは含みません。",
+      src: [
+        ["gamebiz ウマ娘（2026-06-15・公式発表の転載）", "https://gamebiz.jp/news/427779"],
+        ["アルテマ ウマ娘 排出率（2026-10-01更新）", "https://altema.jp/umamusume/gachaensyutsu"],
+        ["Game8 ウマ娘 ジュエル（2026-02-25更新）", "https://game8.jp/umamusume/456096"],
+        ["AUTOMATON ウマ娘 交換Pt（2024-10-29）", "https://automaton-media.com/articles/newsjp/uma-musume-pretty-derby-20241029-316121/"]
+      ],
+      bans: [
+        {
+          id: "chara", name: "育成ウマ娘ガチャ（交換Pt）", model: "simple",
+          P: { rate: null, N: 200 },
+          flag: { rate: "unk", N: "ok" },
+          notes: [
+            "1回ごとに交換Ptが1たまり、200Ptでピックアップ対象と交換できます。次回のガチャには引き継がれません（2026-06-15の公式発表の転載記事）。",
+            "ピックアップ★3（SSR）の内訳は未確認です。ゲーム内の［ガチャ詳細→提供割合］で確認して、「狙いの確率」に入れてください。空欄でも、天井までの回数と金額は出ます。"
+          ]
+        },
+        {
+          id: "support", name: "サポートカードガチャ（交換Pt）", model: "simple",
+          P: { rate: null, N: 200 },
+          flag: { rate: "unk", N: "ok" },
+          notes: [
+            "育成ウマ娘ガチャと同じく、1回1Pt・200Ptでピックアップ対象のSSRサポートカードと交換できます。",
+            "ピックアップ率は未確認です。ゲーム内の提供割合を確認して入力してください。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "pjsk", name: "プロジェクトセカイ", unitName: "クリスタル", perPull: 300, yenUnit: 1,
+      yenNote: "クリスタル1個≒1円として換算（Game8の記載からの読み取りで、正規のパック価格表は未確認）。",
+      src: [
+        ["Game8 プロセカ ガチャ（2025-11-21更新）", "https://game8.jp/pjsekai/542757"],
+        ["AppMedia プロセカ（2021年・更新停止）", "https://appmedia.jp/?p=6297067"],
+        ["smabros プロセカ（2026-02-15・個人ブログ）", "https://smabros.net/2026/02/15/%E3%80%90%E3%83%97%E3%83%AD%E3%82%BB%E3%82%AB%E3%80%91%E3%82%AC%E3%83%81%E3%83%A3%E7%A2%BA%E7%8E%87%E3%81%A8%E5%A4%A9%E4%BA%95%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E5%AE%8C%E5%85%A8%E8%A7%A3%E8%AA%AC/"]
+      ],
+      bans: [
+        {
+          id: "seal", name: "ガチャシール（300枚で交換）", model: "simple",
+          P: { rate: 0.004, N: 300 },
+          flag: { rate: "est", N: "est" },
+          notes: [
+            "1回ごとにガチャシール1枚、300枚でピックアップキャラ1人と交換できます。ガチャシール券を使うと、約200連で交換できます。",
+            "出典はすべて二次情報で、一部は2021年の古い記事です。公式の提供割合は取得できていません。",
+            "狙いの確率0.4%は、3人ピックアップで各0.4%という古い記事の値です。フェス限定ガチャなどでは違います。ゲーム内で確認して直してください。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "ba", name: "ブルーアーカイブ", unitName: "青輝石", perPull: 0,
+      src: [
+        ["ファミ通 ブルアカ 新天井（2026-07）", "https://www.famitsu.com/article/202607/82796"],
+        ["電撃オンライン ブルアカ（2026-07-28）", "https://dengekionline.com/article/202607/82720"],
+        ["GameBusiness ブルアカ（2026-07-29）", "https://www.gamebusiness.jp/article/2026/07/29/27573.html"],
+        ["GameRanbu ブルアカ 確率（2025-07-22更新）", "https://gameranbu.jp/bluearchive/4abc074b434e7a511693"]
+      ],
+      bans: [
+        {
+          id: "pu", name: "ピックアップ募集（呼び出しチャージ）", model: "simple",
+          P: { rate: 0.007, N: 200, ms: { 100: 0.5 } },
+          flag: { rate: "ok", N: "est" },
+          notes: [
+            "2026年7月29日に仕様が変わりました（旧：呼び出しポイント200Pで交換）。新仕様は、ピックアップ生徒が出るまで募集1回ごとにカウントし、100回目で★3確定（50%でピックアップ生徒）、199回までに出なければ200回目で必ずピックアップ生徒、というものです。",
+            "このデータは報道記事のみで、公式の詳細は未確認です。ピックアップ★3の確率0.7%は2025年の記事の値です。",
+            "青輝石の1回あたりの数と円価格は未確認です。1回あたりの金額を自分で入力してください。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "gbf", name: "グランブルーファンタジー", unitName: "宝晶石", perPull: 300,
+      src: [
+        ["神ゲー攻略 グラブル ガチャ（2026-11-04表記）", "https://kamigame.jp/%E3%82%B0%E3%83%A9%E3%83%96%E3%83%AB/%E3%82%AC%E3%83%81%E3%83%A3%E9%96%A2%E9%80%A3/index.html"],
+        ["GameRanbu グラブル 天井（2024-03-10更新）", "https://gameranbu.jp/granblue/ab9e11f5fb4a6130a999"]
+      ],
+      bans: [
+        {
+          id: "pu", name: "ガチャ（300回で天井交換）", model: "simple",
+          P: { rate: null, N: 300 },
+          flag: { rate: "unk", N: "ok" },
+          notes: [
+            "期間中に300回引くと、蒼光の御印300個で範囲内の武器か召喚石を1つ選んで交換できます。",
+            "ラインナップの更新で御印がリセットされる事例があります。1回300宝晶石は逆算で、円価格は未確認です。",
+            "SSR率は通常3%、フェス中6%ですが、狙いの1つが出る確率は公開の表をゲーム内で確認して入力してください。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "ark", name: "アークナイツ（日本版）", unitName: "合成玉", perPull: 600,
+      src: [
+        ["esports.net アークナイツ ガチャ（2025-09-04・第三者記事）", "https://www.esports.net/jp/wiki/guides/arknights-gacha/"]
+      ],
+      bans: [
+        {
+          id: "lim", name: "リミテッドスカウト（300回で交換）", model: "simple",
+          P: { rate: null, N: 300 },
+          flag: { rate: "unk", N: "est" },
+          notes: [
+            "リミテッドスカウトは、1回ごとに限定契約証が1枚もらえ、300枚で新しい限定オペレーターと交換できます（2024年10月導入）。",
+            "出典は第三者の記事1つで、公式は取得できていません。純正源石1個＝合成玉180個、1回600合成玉です。源石の円価格は未確認です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "nikke", name: "勝利の女神：NIKKE", unitName: "ジュエル", perPull: 300,
+      src: [
+        ["GameBusiness NIKKE（2026-07-30）", "https://www.gamebusiness.jp/article/2026/07/30/27575_2.html"]
+      ],
+      bans: [
+        {
+          id: "pu", name: "ピックアップ（ゴールドマイレージ）", model: "simple",
+          P: { rate: 0.02, N: 200 },
+          flag: { rate: "unk", N: "est" },
+          notes: [
+            "ピックアップを1回引くごとにゴールドマイレージが1枚もらえ、200枚で現在のピックアップキャラと交換できます。ガチャ終了後も失効せず、別のピックアップ期間に持ち越せます。",
+            "SSR率は4%で、通常ピックアップ2%、ピルグリム1%と報じられています。ピックアップが複数ある場合は、狙いの1体の確率に直してください。",
+            "1回300ジュエルです。円価格は未確認です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "gakumas", name: "学園アイドルマスター", unitName: "ジュエル", perPull: 0,
+      src: [
+        ["Game8 学マス ガチャ（2026-11-02更新）", "https://game8.jp/gakuen-idolmaster/609696"],
+        ["Game8 学マス ジュエル価格（2026-05-26更新）", "https://game8.jp/gakuen-idolmaster/785438"]
+      ],
+      bans: [
+        {
+          id: "idol", name: "ピックアップSSRアイドル（200連）", model: "simple",
+          P: { rate: 0.0075, N: 200 },
+          flag: { rate: "est", N: "ok" },
+          notes: [
+            "1回ごとに1Ptたまり、200Ptでプロデュースアイドルかサポートカードと交換できます。ガチャ期間が終わるとPtはフラワーに変わります。",
+            "ピックアップSSRアイドルは0.75%（二次情報）。1回あたりのジュエル数と円価格は未確認なので、1回あたりの金額を自分で入力してください（Game8の価格表からの計算では、1回およそ280〜375円）。"
+          ]
+        },
+        {
+          id: "sup", name: "ピックアップSSRサポートカード（200連）", model: "simple",
+          P: { rate: 0.01, N: 200 },
+          flag: { rate: "est", N: "ok" },
+          notes: [
+            "ピックアップSSRサポートカードは1.0%（二次情報）。200Ptで交換できます。",
+            "1回あたりの金額は未確認なので、自分で入力してください。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "prospi", name: "プロ野球スピリッツA（プロスピA）", unitName: "エナジー", perPull: 0,
+      src: [
+        ["Game8 プロスピA 福袋・セレクションの天井（2025-11-20更新）", "https://game8.jp/prospi_a/395648"],
+        ["Game8 プロスピA ガチャ一覧（2026-10-22更新）", "https://game8.jp/prospi_a/444662"],
+        ["Game8 プロスピA ガチャ確率（2026-11-04更新）", "https://game8.jp/prospi_a/377892"],
+        ["アルテマ プロスピA エナジーの購入（2025-11-01更新）", "https://altema.jp/prospikakin"]
+      ],
+      bans: [
+        {
+          id: "own60", name: "60連目に自チームのSランク確定（セレクション系）", model: "simple",
+          P: { rate: null, N: 60 },
+          flag: { rate: "unk", N: "est" },
+          notes: [
+            "「アニバーサリーセレクション」などは、60連目で対象の自チームのSランク選手を必ず獲得できると紹介されています（Game8）。",
+            "プロスピAは、ガチャごとに確定のしくみが違います（例：プロスピセレクションは30・60・90連目にセレクション選手の確定枠。自チームの確定枠はなし）。開催中のガチャの詳細で、必ず確認してください。",
+            "Sランク選手の排出率は、取得できたページに記載がありませんでした。狙いの確率は、ゲーム内の提供割合を見て入力してください。",
+            "1回あたりのエナジー数は未確認です。エナジーの購入価格は、KONAMI Gamesストアで1,000円＝60エナジー、9,600円＝800エナジーなどです（アルテマ、2025-11-01。ゲーム内ショップは少なめ）。1回あたりの金額を自分で入力してください。"
+          ]
+        },
+        {
+          id: "pick100", name: "100連目に特定の選手が確定（イチローガチャ型）", model: "simple",
+          P: { rate: null, N: 100 },
+          flag: { rate: "unk", N: "est" },
+          notes: [
+            "過去のイチローガチャは、30連・60連でSランク確定、100連で「イチロー」確定だったと紹介されています（Game8、2026-10-22更新）。ガチャごとに仕様が違うので、開催中のものの詳細を確認してください。",
+            "狙いの確率と1回あたりの金額は、未確認です。ゲーム内で確認して入力してください。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "hbr", name: "ヘブンバーンズレッド", unitName: "クォーツ", perPull: 300,
+      src: [
+        ["アルテマ ヘブバン ガチャ（2024-01-01更新・古い）", "https://altema.jp/heavenburnsred/gachaennsyutu"],
+        ["アルテマ ヘブバン クォーツ（2022-12-05更新・古い）", "https://altema.jp/heavenburnsred/quartz"]
+      ],
+      bans: [
+        {
+          id: "pu", name: "ピックアップ（交換ポイント200回）", model: "simple",
+          P: { rate: null, N: 200 },
+          flag: { rate: "unk", N: "est" },
+          notes: [
+            "交換ポイントシステムで、200回引くとピックアップSSを確定入手できます。",
+            "出典が2022〜2024年と古く、現在の仕様は未確認です。ゲーム内で必ず確認してください。クォーツの円価格は未確認です。"
+          ]
+        }
+      ]
+    },
+    {
+      id: "gen1", name: "汎用：ソフト天井＋すり抜け型", unitName: "石", perPull: 0, generic: true,
+      src: [["このツールの計算式（HoYoverse系に近い方式）", ""]],
+      bans: [
+        {
+          id: "x", name: "自分で数字を入れる", model: "hoyo",
+          P: { base: 0.006, soft: 74, step: 0.06, hard: 90, win: 0.5 },
+          flag: { base: "unk", soft: "unk", step: "unk", hard: "unk", win: "unk" },
+          notes: ["数字は例です。ゲーム内の提供割合・天井の仕様に合わせて、詳細設定で書きかえてください。"]
+        }
+      ]
+    },
+    {
+      id: "gen2", name: "汎用：天井交換型（N回で確定）", unitName: "石", perPull: 0, generic: true,
+      src: [["このツールの計算式", ""]],
+      bans: [
+        {
+          id: "x", name: "自分で数字を入れる", model: "simple",
+          P: { rate: 0.01, N: 200 },
+          flag: { rate: "unk", N: "unk" },
+          notes: ["数字は例です。狙いの確率と、天井の回数を詳細設定で書きかえてください。"]
+        }
+      ]
+    },
+    {
+      id: "gen3", name: "汎用：天井なし（確率のみ）", unitName: "石", perPull: 0, generic: true,
+      src: [["このツールの計算式", ""]],
+      bans: [
+        {
+          id: "x", name: "モンスト・ポケポケ等（天井なし）", model: "simple",
+          P: { rate: 0.006, N: 0 },
+          flag: { rate: "unk", N: "ok" },
+          notes: ["天井のないガチャは、引いた回数に関係なく毎回同じ確率です。ゲーム内の提供割合を入れてください。モンストやポケポケ、パズドラなどに使えます（ポケポケはパックごとに1枚ずつの確率が違うので、狙いのカードの確率を入れてください）。"]
+        }
+      ]
+    }
+  ];
+
+  // ============================================================
+  //  計算エンジン
+  // ============================================================
+  function rateAt(P, k) {
+    if (k >= P.hard) return 1;
+    if (k >= P.soft) return Math.min(1, P.base + P.step * (k - P.soft + 1));
+    return P.base;
+  }
+
+  // pmf[n] = 「n回目で初めて狙いが出る」確率
+  function solveHoyo(P, c, g) {
+    var hard = Math.max(1, Math.round(P.hard));
+    c = Math.min(Math.max(0, Math.floor(c)), hard - 1);
+    var a0 = new Array(hard + 1).fill(0);
+    var a1 = new Array(hard + 1).fill(0);
+    if (g) a1[c] = 1; else a0[c] = 1;
+    var pmf = [0];
+    var limit = hard * 2 + 2;
+    for (var n = 1; n <= limit; n++) {
+      var b0 = new Array(hard + 1).fill(0);
+      var b1 = new Array(hard + 1).fill(0);
+      var succ = 0;
+      for (var p = 0; p < hard; p++) {
+        var m0 = a0[p], m1 = a1[p];
+        if (!m0 && !m1) continue;
+        var r = rateAt(P, p + 1);
+        if (r < 1) {
+          b0[p + 1] += m0 * (1 - r);
+          b1[p + 1] += m1 * (1 - r);
+        }
+        succ += m1 * r;
+        succ += m0 * r * P.win;
+        b1[0] += m0 * r * (1 - P.win);
+      }
+      pmf.push(succ);
+      a0 = b0; a1 = b1;
+      var rest = 0;
+      for (var q = 0; q <= hard; q++) rest += a0[q] + a1[q];
+      if (rest < 1e-13) break;
+    }
+    return pmf;
+  }
+
+  function solveSimple(P, c) {
+    c = Math.max(0, Math.floor(c));
+    var N = P.N > 0 ? Math.round(P.N) : 0;
+    var base = (P.rate == null || isNaN(P.rate)) ? 0 : P.rate;
+    var cap = N ? Math.max(2, N - c + 2) : 9000;
+    var pmf = [0];
+    var surv = 1;
+    for (var n = 1; n <= cap; n++) {
+      var k = c + n;
+      var p = base;
+      if (P.ms && P.ms[k] != null) p = Math.max(p, P.ms[k]);
+      if (N && k >= N) p = 1;
+      pmf.push(surv * p);
+      surv *= (1 - p);
+      if (surv < 1e-12) break;
+    }
+    return pmf;
+  }
+
+  function cdfOf(pmf) {
+    var cdf = [0];
+    var s = 0;
+    for (var i = 1; i < pmf.length; i++) { s += pmf[i]; cdf.push(Math.min(1, s)); }
+    return cdf;
+  }
+
+  function quantile(cdf, q) {
+    for (var i = 1; i < cdf.length; i++) if (cdf[i] >= q - 1e-12) return i;
+    return null;
+  }
+
+  function meanOf(pmf) {
+    var t = 0, m = 0;
+    for (var i = 1; i < pmf.length; i++) { t += pmf[i]; m += i * pmf[i]; }
+    return t > 0.999 ? m / t : null;
+  }
+
+  // ============================================================
+  //  画面の状態
+  // ============================================================
+  function $(id) { return document.getElementById(id); }
+  function byId(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return list[0]; }
+
+  var S = {
+    game: GAMES[0], ban: GAMES[0].bans[0], P: null,
+    c: 0, gu: false, stones: 0, tickets: 0, budget: 0, rate: null, yen: null
+  };
+  var lastCalc = null;
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function toast(msg) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+
+  function num(v, def) {
+    var x = parseFloat(v);
+    return isNaN(x) || x < 0 ? def : x;
+  }
+
+  function fmtYen(x) {
+    if (x == null || !isFinite(x)) return "—";
+    return "約" + Math.round(x).toLocaleString("ja-JP") + "円";
+  }
+  function fmtPct(p) {
+    if (p == null) return "—";
+    var v = p * 100;
+    if (v >= 99.95) return "ほぼ100";
+    if (v < 0.05 && v > 0) return "0.1未満";
+    return v.toFixed(v >= 10 ? 1 : 2).replace(/\.?0+$/, function (m) { return m.indexOf(".") === 0 ? "" : m; });
+  }
+
+  function tagHtml(f) {
+    if (f === "est") return '<span class="tag est">推定</span>';
+    if (f === "unk") return '<span class="tag unk">未確認</span>';
+    if (f === "ok") return '<span class="tag ok">出典あり</span>';
+    return "";
+  }
+
+  // ---------- 選択肢 ----------
+  function fillGame() {
+    var sel = $("game");
+    sel.innerHTML = "";
+    GAMES.forEach(function (g) {
+      var o = document.createElement("option");
+      o.value = g.id; o.textContent = g.name;
+      sel.appendChild(o);
+    });
+  }
+  function fillBan() {
+    var sel = $("ban");
+    sel.innerHTML = "";
+    S.game.bans.forEach(function (b) {
+      var o = document.createElement("option");
+      o.value = b.id; o.textContent = b.name;
+      sel.appendChild(o);
+    });
+    sel.value = S.ban.id;
+  }
+
+  function setBan(ban) {
+    S.ban = ban;
+    S.P = clone(ban.P);
+    S.rate = (ban.model === "simple") ? S.P.rate : null;
+  }
+
+  // ---------- 入力欄の見た目 ----------
+  function applyLabels() {
+    var g = S.game, b = S.ban;
+    var hoyo = b.model === "hoyo";
+    if (hoyo) {
+      $("bannote").textContent = "★5（最高レア）は" + S.P.hard + "回で確定。" + (S.P.win < 1 ? "外れた次の★5はピックアップ確定。" : "すり抜けなし。");
+    } else if ((S.P.N | 0) > 0) {
+      $("bannote").textContent = S.P.N + "回で確定（天井交換）。";
+    } else {
+      $("bannote").textContent = "天井なし（毎回同じ確率）。";
+    }
+    $("gu-wrap").hidden = !(hoyo && S.P.win < 1);
+    if (hoyo) {
+      $("c-label").textContent = "今の天井カウント（最後に★5が出てから何連目？）";
+      $("c-hint").textContent = "ゲーム内の履歴で「前回の★5から何回引いたか」を入れます。";
+    } else if ((S.P.N | 0) > 0) {
+      $("c-label").textContent = "今の天井カウント（交換Pt・ガチャシール等の数）";
+      $("c-hint").textContent = "すでにたまっている回数（ポイント）を入れます。";
+    } else {
+      $("c-label").textContent = "今の天井カウント（天井なしなので0のままでOK）";
+      $("c-hint").textContent = "";
+    }
+    var has = g.perPull > 0;
+    $("stones-wrap").hidden = !has;
+    $("stones-label").textContent = "手持ちの" + g.unitName + "（個数）";
+    $("tickets-label").textContent = has ? "チケット等で引ける回数" : "手持ちで引ける回数（石・チケットの合計）";
+    var simple = b.model === "simple";
+    $("rate").parentNode; // no-op
+    $("rate-label").parentNode;
+    $("rate").hidden = !simple;
+    $("rate-label").hidden = !simple;
+    $("rate-hint").hidden = !simple;
+    if (simple) {
+      $("rate-label").innerHTML = "狙いの1体が出る確率（%）" + tagHtml(b.flag && b.flag.rate);
+      $("rate-hint").textContent = (S.P.rate == null)
+        ? "未確認のため空欄です。ゲーム内の提供割合を入れると、途中で出る確率も計算します（空欄でも天井までの回数と金額は出ます）。"
+        : "ゲーム内の提供割合と違うときは直してください。";
+      $("rate").value = (S.P.rate == null) ? "" : round4(S.P.rate * 100);
+    }
+    // 金額欄
+    var sel = $("pattern");
+    sel.innerHTML = "";
+    if (g.pat) {
+      sel.hidden = false;
+      g.pat.forEach(function (p, i) {
+        var o = document.createElement("option");
+        o.value = String(i); o.textContent = p.label;
+        sel.appendChild(o);
+      });
+      var o2 = document.createElement("option");
+      o2.value = "custom"; o2.textContent = "自分で金額を入力";
+      sel.appendChild(o2);
+      sel.value = "0";
+      S.yen = Math.round(g.perPull * g.pat[0].unit);
+    } else if (g.yenUnit && g.perPull) {
+      sel.hidden = true;
+      S.yen = Math.round(g.perPull * g.yenUnit);
+    } else {
+      sel.hidden = true;
+      S.yen = null;
+    }
+    $("yen").value = S.yen == null ? "" : S.yen;
+    $("yen-hint").textContent = g.yenNote ? g.yenNote : (g.perPull
+      ? "1回" + g.perPull + g.unitName + "。円価格は未確認なので、わかる場合だけ入力してください。"
+      : "わかる場合だけ入力してください（空欄だと金額は表示されません）。");
+  }
+
+  function round2(x) { return Math.round(x * 100) / 100; }
+  function round4(x) { return Math.round(x * 10000) / 10000; }
+
+  // ---------- 詳細設定 ----------
+  function buildAdv() {
+    var box = $("advfields");
+    box.innerHTML = "";
+    var P = S.P, f = S.ban.flag || {};
+    function add(key, label, val, step, min, max, unit) {
+      var wrap = document.createElement("div");
+      var lab = document.createElement("label");
+      lab.setAttribute("for", "adv-" + key);
+      lab.innerHTML = label + tagHtml(f[key]);
+      var inp = document.createElement("input");
+      inp.type = "number"; inp.id = "adv-" + key; inp.inputMode = "decimal";
+      inp.step = String(step); inp.min = String(min); if (max != null) inp.max = String(max);
+      inp.value = String(val);
+      inp.setAttribute("data-key", key);
+      inp.setAttribute("data-unit", unit);
+      inp.addEventListener("input", onAdv);
+      wrap.appendChild(lab); wrap.appendChild(inp);
+      box.appendChild(wrap);
+    }
+    if (S.ban.model === "hoyo") {
+      add("base", "★5（最高レア）の基本確率（%）", round4(P.base * 100), 0.01, 0, 100, "pct");
+      add("soft", "確率が上がり始める回数（◯回目から）", P.soft, 1, 1, 500, "int");
+      add("step", "1回ごとに増える確率（%）", round4(P.step * 100), 0.1, 0, 100, "pct");
+      add("hard", "確定する回数（ハード天井）", P.hard, 1, 1, 500, "int");
+      add("win", "ピックアップが出る確率（%）（すり抜けなしは100）", round4(P.win * 100), 1, 0, 100, "pct");
+    } else {
+      add("N", "天井の回数（0なら天井なし）", P.N || 0, 1, 0, 2000, "int");
+      var hint = document.createElement("p");
+      hint.className = "hint";
+      hint.textContent = "狙いの確率は、2.の入力欄で変えられます。";
+      box.appendChild(hint);
+    }
+  }
+
+  function onAdv(ev) {
+    var el = ev.target, key = el.getAttribute("data-key"), unit = el.getAttribute("data-unit");
+    var v = parseFloat(el.value);
+    if (isNaN(v) || v < 0) return;
+    S.P[key] = unit === "pct" ? v / 100 : v;
+    recalc();
+  }
+
+  function buildSrc() {
+    var ul = $("srclist");
+    ul.innerHTML = "";
+    var li0 = document.createElement("li");
+    li0.textContent = "データの最終確認日：" + CHECKED + "。公式の提供割合の画面とは照合できていません。";
+    ul.appendChild(li0);
+    (S.ban.notes || []).forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+    S.game.src.forEach(function (s) {
+      var li = document.createElement("li");
+      if (s[1]) {
+        var a = document.createElement("a");
+        a.href = s[1]; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = s[0];
+        li.appendChild(a);
+      } else {
+        li.textContent = s[0];
+      }
+      ul.appendChild(li);
+    });
+  }
+
+  // ============================================================
+  //  計算と表示
+  // ============================================================
+  function readInputs() {
+    S.c = Math.floor(num($("c").value, 0));
+    S.gu = $("gu").checked;
+    S.stones = Math.floor(num($("stones").value, 0));
+    S.tickets = Math.floor(num($("tickets").value, 0));
+    S.budget = num($("budget").value, 0);
+    var y = parseFloat($("yen").value);
+    S.yen = (isNaN(y) || y <= 0) ? null : y;
+    if (S.ban.model === "simple") {
+      var r = parseFloat($("rate").value);
+      S.P.rate = (isNaN(r) || r < 0) ? null : Math.min(1, r / 100);
+    }
+  }
+
+  function recalc() {
+    readInputs();
+    var g = S.game, b = S.ban, P = S.P;
+    var pmf, ceiling, hasCeil;
+    if (b.model === "hoyo") {
+      pmf = solveHoyo(P, S.c, S.gu && P.win < 1);
+    } else {
+      pmf = solveSimple(P, S.c);
+    }
+    var cdf = cdfOf(pmf);
+    var last = cdf.length - 1;
+    var certain = cdf[last] >= 0.999999;
+    var isCeil = (b.model === "hoyo") || (P.N > 0);
+    hasCeil = certain && isCeil;
+    ceiling = null;
+    if (hasCeil) {
+      if (b.model === "hoyo") {
+        var hd = Math.max(1, Math.round(P.hard));
+        var cc = Math.min(Math.max(0, S.c), hd - 1);
+        ceiling = (hd - cc) + ((P.win < 1 && !S.gu) ? hd : 0);
+      } else {
+        ceiling = Math.max(1, Math.round(P.N) - S.c);
+      }
+    }
+
+    var pulls = S.tickets;
+    if (g.perPull > 0) pulls += Math.floor(S.stones / g.perPull);
+    if (S.yen) pulls += Math.floor(S.budget / S.yen);
+    var pAvail = pulls <= 0 ? 0 : (pulls >= last ? cdf[last] : cdf[pulls]);
+
+    var qs = [0.5, 0.8, 0.9, 0.99].map(function (q) {
+      var n = quantile(cdf, q);
+      return { q: q, n: n, yen: (n != null && S.yen) ? n * S.yen : null };
+    });
+    var mean = meanOf(pmf);
+
+    lastCalc = { pmf: pmf, cdf: cdf, pulls: pulls, pAvail: pAvail, qs: qs, mean: mean, ceiling: ceiling, hasCeil: hasCeil };
+    renderResult();
+    drawChart();
+    saveLocal();
+    updateHash();
+  }
+
+  function noRate() {
+    return S.ban.model === "simple" && (S.P.rate == null) && !(S.P.N > 0);
+  }
+
+  function renderResult() {
+    var L = lastCalc, el = $("result");
+    var html = "";
+    var rateMissing = S.ban.model === "simple" && S.P.rate == null;
+    if (S.ban.model === "simple" && S.P.rate == null && !(S.P.N > 0)) {
+      el.innerHTML = '<p class="warn">狙いの確率を入力すると計算できます。</p>';
+      return;
+    }
+    if (L.pulls > 0) {
+      if (rateMissing) {
+        html += '<div class="result-head"><div class="sub">いま引ける ' + L.pulls + ' 回では</div>' +
+          '<div class="big">' + (L.hasCeil && L.pulls >= L.ceiling ? '天井に届く' : '天井に届かない') + '</div>' +
+          '<div class="sub">狙いの確率を入れると、途中で出る確率も出ます</div></div>';
+      } else {
+        html += '<div class="result-head"><div class="sub">いま引ける ' + L.pulls + ' 回で狙いが出る確率</div>' +
+          '<div class="big">' + fmtPct(L.pAvail) + '<span style="font-size:22px">%</span></div>' +
+          '<div class="sub">出ない確率 ' + fmtPct(1 - L.pAvail) + '%</div></div>';
+      }
+    } else {
+      html += '<div class="result-head"><div class="sub">手持ち・予算を入れると、出る確率が出ます</div></div>';
+    }
+    var cards = "";
+    if (L.hasCeil) {
+      var remain = L.ceiling;
+      cards += '<div class="mini"><div class="k">確実に出るまで（最大）</div><div class="v">' + remain + '<small>回</small></div></div>';
+      cards += '<div class="mini"><div class="k">その金額の目安</div><div class="v">' + (S.yen ? fmtYen(remain * S.yen).replace("約", "約") : "—") + '</div></div>';
+    } else {
+      cards += '<div class="mini"><div class="k">天井</div><div class="v">なし</div></div>';
+      cards += '<div class="mini"><div class="k">1回の金額</div><div class="v">' + (S.yen ? Math.round(S.yen) + "<small>円</small>" : "—") + '</div></div>';
+    }
+    if (L.mean != null && !rateMissing) {
+      cards += '<div class="mini"><div class="k">平均でかかる回数</div><div class="v">' + L.mean.toFixed(1) + '<small>回</small></div></div>';
+      cards += '<div class="mini"><div class="k">平均の金額の目安</div><div class="v">' + (S.yen ? fmtYen(L.mean * S.yen) : "—") + '</div></div>';
+    }
+    html += '<div class="cards">' + cards + '</div>';
+    if (!rateMissing) {
+      html += '<table><thead><tr><th>出る確率</th><th>必要な回数</th><th>金額の目安</th></tr></thead><tbody>';
+      L.qs.forEach(function (r) {
+        html += '<tr><td>' + Math.round(r.q * 100) + '%</td><td>' + (r.n == null ? "—" : r.n + "回") + '</td><td>' + (r.yen == null ? "—" : fmtYen(r.yen)) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    if (!S.yen) html += '<p class="hint">1回あたりの金額を入れると、円でも表示されます。</p>';
+    el.innerHTML = html;
+  }
+
+  // ---------- グラフ ----------
+  function drawChart() {
+    var cv = $("chart");
+    var L = lastCalc;
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth || 600, h = cv.clientHeight || 190;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var c = cv.getContext("2d");
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, w, h);
+    var cdf = L.cdf;
+    var last = cdf.length - 1;
+    var q99 = quantile(cdf, 0.99) || last;
+    var xmax = Math.max(10, Math.min(last, Math.ceil(q99 * 1.08)), Math.min(last, Math.ceil(L.pulls * 1.1)));
+    if (S.ban.model === "simple" && S.P.rate == null && !(S.P.N > 0)) { return; }
+    var padL = 36, padR = 10, padT = 12, padB = 24;
+    var iw = w - padL - padR, ih = h - padT - padB;
+    function X(n) { return padL + (n / xmax) * iw; }
+    function Y(p) { return padT + (1 - p) * ih; }
+    c.strokeStyle = "#2d3461"; c.fillStyle = "#a3a9d4"; c.lineWidth = 1; c.font = "11px sans-serif";
+    [0, 0.5, 0.9, 1].forEach(function (p) {
+      c.beginPath(); c.moveTo(padL, Y(p)); c.lineTo(w - padR, Y(p)); c.stroke();
+      c.textAlign = "right"; c.fillText(Math.round(p * 100) + "%", padL - 4, Y(p) + 4);
+    });
+    c.textAlign = "center";
+    var step = xmax > 300 ? 100 : xmax > 120 ? 50 : 20;
+    for (var n = 0; n <= xmax; n += step) c.fillText(String(n), X(n), h - 8);
+    c.strokeStyle = "#ffd166"; c.lineWidth = 2.5; c.beginPath();
+    for (var i = 0; i <= xmax && i <= last; i++) {
+      var x = X(i), y = Y(cdf[i]);
+      if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+    }
+    c.stroke();
+    if (L.pulls > 0 && L.pulls <= xmax) {
+      c.strokeStyle = "#ff6b81"; c.lineWidth = 1.5; c.setLineDash([4, 3]);
+      c.beginPath(); c.moveTo(X(L.pulls), padT); c.lineTo(X(L.pulls), padT + ih); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = "#ff6b81"; c.textAlign = L.pulls > xmax * 0.8 ? "right" : "left";
+      c.fillText("いまの" + L.pulls + "回", X(L.pulls) + (L.pulls > xmax * 0.8 ? -4 : 4), padT + 10);
+    }
+  }
+
+  // ---------- カード画像 ----------
+  var FONT = '"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo","Noto Sans JP",sans-serif';
+
+  function drawCard() {
+    var L = lastCalc, cv = $("card"), c = cv.getContext("2d");
+    var rateMissing = S.ban.model === "simple" && S.P.rate == null;
+    var W = 1080, H = rateMissing ? 1000 : 1250;
+    cv.width = W; cv.height = H;
+    c.textBaseline = "alphabetic";
+    c.fillStyle = "#0e1124"; c.fillRect(0, 0, W, H);
+    c.strokeStyle = "#ffd166"; c.lineWidth = 6; c.strokeRect(30, 30, W - 60, H - 60);
+    c.strokeStyle = "#2d3461"; c.lineWidth = 2; c.strokeRect(44, 44, W - 88, H - 88);
+    c.textAlign = "center";
+    c.fillStyle = "#ffd166"; c.font = "800 44px " + FONT; c.fillText("ガチャ天井計算", W / 2, 120);
+    c.fillStyle = "#eef0ff"; fit(c, S.game.name, W - 180, 56, "800", 30); c.fillText(S.game.name, W / 2, 200);
+    c.fillStyle = "#a3a9d4"; fit(c, S.ban.name, W - 180, 34, "500", 20); c.fillText(S.ban.name, W / 2, 248);
+
+    var y = 340;
+    if (rateMissing) {
+      c.fillStyle = "#a3a9d4"; c.font = "600 38px " + FONT;
+      c.fillText(L.hasCeil ? "確実に出るまで 最大" : "天井なし", W / 2, y);
+      if (L.hasCeil) {
+        c.fillStyle = "#ffd166"; c.font = "800 190px " + FONT;
+        c.fillText(L.ceiling + "回", W / 2, y + 190);
+        c.fillStyle = "#eef0ff"; c.font = "800 80px " + FONT;
+        c.fillText(S.yen ? fmtYen(L.ceiling * S.yen) : "金額は未入力", W / 2, y + 310);
+        c.fillStyle = "#a3a9d4"; c.font = "600 34px " + FONT;
+        var need = L.ceiling - L.pulls;
+        var line = L.pulls > 0
+          ? (need > 0 ? "いま引ける" + L.pulls + "回 → 天井まであと" + need + "回" + (S.yen ? "（" + fmtYen(need * S.yen) + "）" : "")
+                      : "いま引ける" + L.pulls + "回で天井に届く")
+          : "";
+        if (line) { fit(c, line, W - 140, 34, "600", 22); c.fillText(line, W / 2, y + 390); }
+      }
+      y += 400;
+    } else if (L.pulls > 0) {
+      c.fillStyle = "#a3a9d4"; c.font = "600 36px " + FONT;
+      c.fillText("いま引ける " + L.pulls + " 回で狙いが出る確率", W / 2, y);
+      c.fillStyle = "#ffd166"; c.font = "800 190px " + FONT;
+      var pt = fmtPct(L.pAvail);
+      c.fillText(pt + "%", W / 2, y + 190);
+      y += 250;
+    } else {
+      c.fillStyle = "#eef0ff"; c.font = "800 56px " + FONT;
+      c.fillText(L.hasCeil ? "天井まで最大 " + L.ceiling + " 回" : "天井なし", W / 2, y + 60);
+      y += 150;
+    }
+    if (L.hasCeil && !rateMissing) {
+      c.fillStyle = "#eef0ff"; c.font = "700 44px " + FONT;
+      var t = "確実に出るまで 最大" + L.ceiling + "回" + (S.yen ? "（" + fmtYen(L.ceiling * S.yen) + "）" : "");
+      fit(c, t, W - 140, 44, "700", 24); c.fillText(t, W / 2, y);
+      y += 40;
+    }
+    y += 40;
+    if (!rateMissing) {
+      c.textAlign = "left"; c.font = "700 30px " + FONT; c.fillStyle = "#a3a9d4";
+      c.fillText("出る確率", 130, y); c.textAlign = "right"; c.fillText("回数", 640, y); c.fillText("金額の目安", 950, y);
+      y += 18;
+      L.qs.forEach(function (r) {
+        y += 66;
+        c.strokeStyle = "#2d3461"; c.lineWidth = 2; c.beginPath(); c.moveTo(110, y - 44); c.lineTo(970, y - 44); c.stroke();
+        c.fillStyle = "#eef0ff"; c.font = "700 40px " + FONT;
+        c.textAlign = "left"; c.fillText(Math.round(r.q * 100) + "%", 130, y);
+        c.textAlign = "right"; c.fillText(r.n == null ? "—" : r.n + "回", 640, y);
+        c.fillStyle = "#ffd166"; c.fillText(r.yen == null ? "—" : fmtYen(r.yen), 950, y);
+      });
+      y += 60;
+    }
+    c.textAlign = "center"; c.fillStyle = "#ff6b81"; c.font = "800 36px " + FONT;
+    c.fillText("使いすぎる前に、数字で確認。 #ガチャ天井計算", W / 2, H - 150);
+    c.fillStyle = "#a3a9d4"; c.font = "500 24px " + FONT;
+    c.fillText("非公式の計算ツールです。数字は攻略Wiki等をもとにした目安です。", W / 2, H - 100);
+    if (location.protocol.indexOf("http") === 0) {
+      c.font = "500 22px " + FONT; c.fillText(location.host + location.pathname, W / 2, H - 66);
+    }
+  }
+  function fit(c, text, maxW, size, weight, min) {
+    var s = size;
+    while (s > min) { c.font = weight + " " + s + "px " + FONT; if (c.measureText(text).width <= maxW) break; s -= 2; }
+    c.font = weight + " " + s + "px " + FONT;
+  }
+
+  function shareText() {
+    var L = lastCalc, t = S.game.name + "（" + S.ban.name + "）";
+    if (L.hasCeil) t += "は天井まで最大" + L.ceiling + "回" + (S.yen ? "（" + fmtYen(L.ceiling * S.yen) + "）" : "");
+    if (L.pulls > 0 && !(S.ban.model === "simple" && S.P.rate == null)) t += "。いまの手持ち" + L.pulls + "回で狙いが出る確率は" + fmtPct(L.pAvail) + "%";
+    return t + "\n#ガチャ天井計算";
+  }
+
+  // ---------- URL・保存 ----------
+  function stateParams() {
+    var u = new URLSearchParams();
+    u.set("g", S.game.id); u.set("b", S.ban.id);
+    u.set("c", String(S.c)); if (S.gu) u.set("gu", "1");
+    if (S.stones) u.set("st", String(S.stones));
+    if (S.tickets) u.set("tk", String(S.tickets));
+    if (S.budget) u.set("bd", String(S.budget));
+    if (S.yen) u.set("y", String(S.yen));
+    var base = S.ban.P;
+    Object.keys(S.P).forEach(function (k) {
+      if (k === "ms") return;
+      if (S.P[k] !== base[k]) u.set("x." + k, S.P[k] == null ? "" : String(S.P[k]));
+    });
+    return u;
+  }
+  function updateHash() {
+    try { history.replaceState(null, "", location.href.split("#")[0] + "#" + stateParams().toString()); } catch (e) { /* 何もしない */ }
+  }
+  function saveLocal() {
+    try { localStorage.setItem("gacha-tenjo-state", stateParams().toString()); } catch (e) { /* 何もしない */ }
+  }
+
+  function loadFrom(str) {
+    var u;
+    try { u = new URLSearchParams(str); } catch (e) { return false; }
+    if (!u.get("g")) return false;
+    var g = byId(GAMES, u.get("g"));
+    if (g.id !== u.get("g")) return false;
+    S.game = g;
+    setBan(byId(g.bans, u.get("b")));
+    u.forEach(function (v, k) {
+      if (k.indexOf("x.") === 0) {
+        var key = k.slice(2);
+        if (key in S.P) {
+          if (v === "") S.P[key] = null; else { var f = parseFloat(v); if (!isNaN(f)) S.P[key] = f; }
+        }
+      }
+    });
+    fillBan();
+    $("game").value = g.id;
+    applyLabels();
+    buildAdv(); buildSrc();
+    $("c").value = u.get("c") || 0;
+    $("gu").checked = u.get("gu") === "1";
+    $("stones").value = u.get("st") || 0;
+    $("tickets").value = u.get("tk") || 0;
+    $("budget").value = u.get("bd") || 0;
+    if (u.get("y")) {
+      $("yen").value = u.get("y");
+      if (S.game.pat) $("pattern").value = "custom";
+    }
+    if (S.ban.model === "simple") $("rate").value = S.P.rate == null ? "" : round4(S.P.rate * 100);
+    return true;
+  }
+
+  // ---------- イベント ----------
+  function onGame() {
+    S.game = byId(GAMES, $("game").value);
+    setBan(S.game.bans[0]);
+    fillBan(); applyLabels(); buildAdv(); buildSrc(); resetInputs(); recalc();
+  }
+  function onBan() {
+    setBan(byId(S.game.bans, $("ban").value));
+    applyLabels(); buildAdv(); buildSrc(); recalc();
+  }
+  function resetInputs() {
+    $("c").value = 0; $("gu").checked = false; $("stones").value = 0; $("tickets").value = 0; $("budget").value = 0;
+  }
+  function onPattern() {
+    var v = $("pattern").value;
+    if (v === "custom") { $("yen").focus(); return; }
+    var p = S.game.pat[parseInt(v, 10)];
+    $("yen").value = Math.round(S.game.perPull * p.unit);
+    recalc();
+  }
+  function saveImage() {
+    drawCard();
+    $("card").toBlob(function (blob) {
+      if (!blob) { toast("画像をつくれませんでした。"); return; }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "gacha-tenjo.png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast("画像を保存しました。");
+    }, "image/png");
+  }
+  function copyLink() {
+    var link = location.href.split("#")[0] + "#" + stateParams().toString();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function () { toast("リンクをコピーしました。"); },
+        function () { window.prompt("このリンクをコピーしてください", link); });
+    } else {
+      window.prompt("このリンクをコピーしてください", link);
+    }
+  }
+
+  function init() {
+    fillGame();
+    var loaded = false;
+    if (location.hash.length > 1) loaded = loadFrom(location.hash.slice(1));
+    if (!loaded) {
+      var saved = null;
+      try { saved = localStorage.getItem("gacha-tenjo-state"); } catch (e) { saved = null; }
+      if (saved) loaded = loadFrom(saved);
+    }
+    if (!loaded) {
+      $("game").value = GAMES[0].id;
+      setBan(GAMES[0].bans[0]);
+      fillBan(); applyLabels(); buildAdv(); buildSrc();
+    }
+    $("game").addEventListener("change", onGame);
+    $("ban").addEventListener("change", onBan);
+    $("pattern").addEventListener("change", onPattern);
+    ["c", "gu", "stones", "tickets", "budget", "rate", "yen"].forEach(function (id) {
+      $(id).addEventListener("input", recalc);
+      $(id).addEventListener("change", recalc);
+    });
+    $("btn-card").addEventListener("click", function () {
+      $("card-area").hidden = false; drawCard();
+      $("card-area").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    $("btn-save").addEventListener("click", saveImage);
+    $("btn-x").addEventListener("click", function () {
+      window.open("https://x.com/intent/post?text=" + encodeURIComponent(shareText()), "_blank", "noopener");
+    });
+    $("btn-copy").addEventListener("click", copyLink);
+    $("btn-reset").addEventListener("click", function () {
+      setBan(S.ban); applyLabels(); buildAdv(); recalc(); toast("初期値に戻しました。");
+    });
+    window.addEventListener("resize", function () { if (lastCalc) drawChart(); });
+    recalc();
+  }
+
+  window.__gacha = { solveHoyo: solveHoyo, solveSimple: solveSimple, cdfOf: cdfOf, GAMES: GAMES };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+</body>
+</html>
